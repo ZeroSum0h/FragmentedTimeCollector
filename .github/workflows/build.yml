@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  ANDROID_HOME: /usr/local/lib/android/sdk
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,12 +21,13 @@ jobs:
           distribution: 'temurin'
 
       - name: Accept Android licenses
-        run: yes | sdkmanager --licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+      - name: Generate Gradle wrapper
+        run: gradle wrapper --gradle-version 8.2
 
       - name: Build debug APK
-        run: |
-          gradle wrapper --gradle-version 8.2
-          ./gradlew assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
