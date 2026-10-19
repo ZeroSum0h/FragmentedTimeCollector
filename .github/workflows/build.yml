@@ -17,12 +17,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses
 
       - name: Build debug APK
         run: |
-          chmod +x gradlew 2>/dev/null || true
           gradle wrapper --gradle-version 8.2
           ./gradlew assembleDebug
 
