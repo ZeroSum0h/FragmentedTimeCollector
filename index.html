@@ -8,48 +8,114 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #fafafa;
-            font-family: -apple-system, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
         }
-        .download-bar {
+        .navbar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            padding: 12px 20px;
+            height: 56px;
             background: #fff;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+        }
+        .navbar .brand {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .navbar .actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .navbar .user-info {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-sm:hover { border-color: #6366f1; color: #6366f1; }
+        .btn-sm.primary { background: #6366f1; color: #fff; border-color: #6366f1; }
+        .btn-sm.primary:hover { background: #4f46e5; }
+        .main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding-top: 56px;
+        }
+        .main h1 {
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: #1f2937;
+            letter-spacing: 0.1em;
+        }
+        .download-bar {
+            position: fixed;
+            top: 56px;
+            left: 0;
+            right: 0;
+            padding: 10px 24px;
+            background: #eef2ff;
+            border-bottom: 1px solid #e0e7ff;
             text-align: center;
+            z-index: 99;
         }
         .download-bar a {
-            display: inline-block;
-            padding: 8px 24px;
-            font-size: 0.9rem;
-            color: #fff;
-            background: #222;
-            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #6366f1;
             text-decoration: none;
-            letter-spacing: 0.05em;
+            font-weight: 500;
         }
-        .download-bar a:hover {
-            background: #444;
-        }
-        h1 {
-            font-size: 2.4rem;
-            font-weight: 300;
-            color: #222;
-            letter-spacing: 0.12em;
-        }
+        .download-bar a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="download-bar">
-        <a href="https://github.com/ZeroSum0h/FragmentedTimeCollector/releases/download/v1.0/app-debug.apk">下载 Android APP</a>
+    <nav class="navbar">
+        <span class="brand">碎片时间收集器</span>
+        <div class="actions">
+            <span class="user-info" id="userInfo"></span>
+            <a href="/admin.html" class="btn-sm primary" id="adminBtn" style="display:none">用户管理</a>
+            <button class="btn-sm" id="logoutBtn">退出</button>
+        </div>
+    </nav>
+    <div class="download-bar" id="downloadBar">
+        <a href="/FragmentedTimeCollector.apk" download>下载 Android APP</a>
     </div>
-    <h1>碎片时间收集器</h1>
+    <div class="main">
+        <h1>碎片时间收集器</h1>
+    </div>
+    <script>
+        if (/;\s?wv\)/.test(navigator.userAgent)) {
+            document.getElementById('downloadBar').style.display = 'none';
+        }
+        (async () => {
+            const res = await fetch('/api/me');
+            if (!res.ok) { window.location.href = '/login.html'; return; }
+            const user = await res.json();
+            document.getElementById('userInfo').textContent = user.username;
+            if (user.role === 'admin') document.getElementById('adminBtn').style.display = '';
+        })();
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/login.html';
+        });
+    </script>
 </body>
 </html>
