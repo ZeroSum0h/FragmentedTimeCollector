@@ -102,6 +102,15 @@
                     <div class="invite-expire" id="inviteExpire"></div>
                 </div>
             </div>
+            <div class="card" id="versionCard" style="display:none;text-align:center">
+                <div style="font-size:0.9rem;font-weight:600;color:#1f2937;margin-bottom:12px">版本信息</div>
+                <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px">
+                    <div><div style="font-size:0.75rem;color:#9ca3af;margin-bottom:4px">当前版本</div><div id="curVersion" style="font-size:0.95rem;font-weight:600;color:#374151">--</div></div>
+                    <div><div style="font-size:0.75rem;color:#9ca3af;margin-bottom:4px">最新版本</div><div id="latestVersion" style="font-size:0.95rem;font-weight:600;color:#6366f1">--</div></div>
+                </div>
+                <button class="btn" id="updateBtn" style="display:none">立即更新</button>
+                <div id="upToDate" style="display:none;font-size:0.8rem;color:#10b981">已是最新版本</div>
+            </div>
             <div class="card" style="padding:20px">
                 <button class="btn-danger" id="logoutBtn">退出登录</button>
             </div>
@@ -154,6 +163,24 @@
             t.textContent = msg;
             t.classList.add('show');
             setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        if (window.AndroidApp) {
+            document.getElementById('versionCard').style.display = '';
+            const curCode = window.AndroidApp.getVersionCode();
+            const curName = window.AndroidApp.getVersionName();
+            document.getElementById('curVersion').textContent = 'v' + curName;
+            fetch('/api/version').then(r => r.json()).then(data => {
+                document.getElementById('latestVersion').textContent = 'v' + data.versionName;
+                if (data.versionCode > curCode) {
+                    document.getElementById('updateBtn').style.display = '';
+                } else {
+                    document.getElementById('upToDate').style.display = '';
+                }
+            }).catch(() => {});
+            document.getElementById('updateBtn').addEventListener('click', () => {
+                window.AndroidApp.triggerUpdate();
+            });
         }
 
         function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); sidebarOpen = true; }

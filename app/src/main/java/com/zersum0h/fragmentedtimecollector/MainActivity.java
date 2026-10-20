@@ -59,6 +59,23 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
 
+        webView.addJavascriptInterface(new Object() {
+            @android.webkit.JavascriptInterface
+            public String getVersionName() {
+                try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; }
+                catch (Exception e) { return "unknown"; }
+            }
+            @android.webkit.JavascriptInterface
+            public int getVersionCode() {
+                try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode; }
+                catch (Exception e) { return 0; }
+            }
+            @android.webkit.JavascriptInterface
+            public void triggerUpdate() {
+                runOnUiThread(() -> checkUpdate());
+            }
+        }, "AndroidApp");
+
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
 
         checkUpdate();
