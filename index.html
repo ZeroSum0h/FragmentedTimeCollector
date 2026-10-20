@@ -6,116 +6,197 @@
     <title>碎片时间收集器</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            min-height: 100vh;
-            background: #f0f2f5;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-        }
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 56px;
-            background: #fff;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            z-index: 100;
-        }
-        .navbar .brand {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        .navbar .actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .navbar .user-info {
-            font-size: 0.85rem;
-            color: #6b7280;
-        }
-        .btn-sm {
-            padding: 6px 14px;
-            font-size: 0.8rem;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-            background: #fff;
-            color: #374151;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
-        .btn-sm:hover { border-color: #6366f1; color: #6366f1; }
-        .btn-sm.primary { background: #6366f1; color: #fff; border-color: #6366f1; }
-        .btn-sm.primary:hover { background: #4f46e5; }
-        .main {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding-top: 56px;
-        }
-        .main h1 {
-            font-size: 2.2rem;
-            font-weight: 300;
-            color: #1f2937;
-            letter-spacing: 0.1em;
-        }
-        .download-bar {
-            position: fixed;
-            top: 56px;
-            left: 0;
-            right: 0;
-            padding: 10px 24px;
-            background: #eef2ff;
-            border-bottom: 1px solid #e0e7ff;
-            text-align: center;
-            z-index: 99;
-        }
-        .download-bar a {
-            font-size: 0.85rem;
-            color: #6366f1;
-            text-decoration: none;
-            font-weight: 500;
-        }
+        body { min-height: 100vh; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
+        .sidebar { position: fixed; top: 0; left: 0; width: 240px; height: 100vh; background: #fff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 200; transition: transform 0.3s ease; }
+        .sidebar-user { padding: 24px 20px; border-bottom: 1px solid #f3f4f6; text-align: center; cursor: pointer; text-decoration: none; display: block; }
+        .sidebar-user:hover { background: #f9fafb; }
+        .sidebar-user .avatar { width: 44px; height: 44px; border-radius: 50%; background: #6366f1; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 600; margin: 0 auto 10px; overflow: hidden; }
+        .sidebar-user .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-user .name { font-size: 0.9rem; font-weight: 600; color: #1f2937; }
+        .sidebar-nav { flex: 1; padding: 12px 8px; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.875rem; color: #4b5563; text-decoration: none; transition: all 0.15s; margin-bottom: 2px; }
+        .sidebar-nav a:hover { background: #f3f4f6; color: #1f2937; }
+        .sidebar-nav a.active { background: #eef2ff; color: #6366f1; font-weight: 500; }
+        .sidebar-nav a svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .sidebar-footer { padding: 12px 8px; border-top: 1px solid #f3f4f6; }
+        .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.875rem; color: #4b5563; text-decoration: none; transition: all 0.15s; }
+        .sidebar-footer a:hover { background: #f3f4f6; color: #1f2937; }
+        .sidebar-footer a svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 150; }
+        .main-content { margin-left: 240px; min-height: 100vh; display: flex; align-items: center; justify-content: center; transition: margin-left 0.3s ease; }
+        .main-content h1 { font-size: 2.2rem; font-weight: 300; color: #1f2937; letter-spacing: 0.1em; }
+        .download-bar { position: fixed; top: 0; left: 240px; right: 0; padding: 10px 24px; background: #eef2ff; border-bottom: 1px solid #e0e7ff; text-align: center; z-index: 99; transition: left 0.3s ease; }
+        .download-bar a { font-size: 0.85rem; color: #6366f1; text-decoration: none; font-weight: 500; }
         .download-bar a:hover { text-decoration: underline; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .download-bar { left: 0; }
+            .overlay.active { display: block; }
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <span class="brand">碎片时间收集器</span>
-        <div class="actions">
-            <span class="user-info" id="userInfo"></span>
-            <a href="/admin.html" class="btn-sm primary" id="adminBtn" style="display:none">用户管理</a>
-            <button class="btn-sm" id="logoutBtn">退出</button>
+    <div class="overlay" id="overlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <a href="/profile.html" class="sidebar-user">
+            <div class="avatar" id="avatar">?</div>
+            <div class="name" id="userName">加载中...</div>
+        </a>
+        <nav class="sidebar-nav">
+            <a href="/" class="active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                主页
+            </a>
+            <a href="/admin.html" id="adminLink" style="display:none">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                用户管理
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/settings.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                账号设置
+            </a>
         </div>
-    </nav>
+    </aside>
+
     <div class="download-bar" id="downloadBar">
         <a href="/FragmentedTimeCollector.apk" download>下载 Android APP</a>
     </div>
-    <div class="main">
-        <h1>碎片时间收集器</h1>
+    <div class="main-content">
+        <div style="text-align:center">
+            <h1>碎片时间收集器</h1>
+            <div style="margin-top:20px;display:flex;align-items:center;justify-content:center;gap:12px">
+                <span style="font-size:0.9rem;color:#6b7280">已收集的时间：</span>
+                <span id="totalTime" style="font-weight:600;color:#6366f1;font-size:1.1rem">--</span>
+                <button id="toggleBtn" style="padding:5px 14px;font-size:0.75rem;font-weight:500;border:none;border-radius:20px;background:#c7d2fe;color:#4338ca;cursor:pointer;transition:all 0.2s;letter-spacing:0.03em">总计</button>
+            </div>
+            <div id="timeDetailWrap" style="margin-top:24px;display:inline-block;min-width:300px;perspective:800px">
+                <div id="timeDetail" style="text-align:left;transition:transform 0.4s ease,opacity 0.4s ease;transform-origin:center"></div>
+            </div>
+        </div>
     </div>
+
     <script>
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        let touchStartX = 0, touchStartY = 0, sidebarOpen = false;
+
         if (/;\s?wv\)/.test(navigator.userAgent)) {
             document.getElementById('downloadBar').style.display = 'none';
         }
+
         (async () => {
             const res = await fetch('/api/me');
             if (!res.ok) { window.location.href = '/login.html'; return; }
             const user = await res.json();
-            document.getElementById('userInfo').textContent = user.username;
-            if (user.role === 'admin') document.getElementById('adminBtn').style.display = '';
+            document.getElementById('userName').textContent = user.nickname;
+            document.getElementById('avatar').innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.nickname.charAt(0).toUpperCase();
+            if (user.role === 'admin') document.getElementById('adminLink').style.display = '';
         })();
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await fetch('/api/logout', { method: 'POST' });
-            window.location.href = '/login.html';
+
+        function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); sidebarOpen = true; }
+        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); sidebarOpen = false; }
+        overlay.addEventListener('click', closeSidebar);
+
+        document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, { passive: true });
+        document.addEventListener('touchmove', (e) => {
+            if (sidebarOpen) return;
+            const dx = e.touches[0].clientX - touchStartX;
+            const dy = e.touches[0].clientY - touchStartY;
+            if (dx > 30 && Math.abs(dy) < Math.abs(dx)) openSidebar();
+        }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            if (Math.abs(dx) < 30 || Math.abs(dy) > Math.abs(dx)) return;
+            if (dx < 0 && sidebarOpen) closeSidebar();
+        }, { passive: true });
+
+        const PAGE_NAMES = { home: '主页', admin: '用户管理', profile: '个人主页', settings: '账号设置' };
+        function formatTime(s) {
+            if (s < 60) return s + '秒';
+            if (s < 3600) return Math.floor(s / 60) + '分' + (s % 60) + '秒';
+            const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+            return h + '小时' + m + '分';
+        }
+
+        let showToday = false;
+        let serverData = { total: 0, pages: [], todayTotal: 0, todayPages: [] };
+        let localTotal = 0, localToday = 0, localPages = [], localTodayPages = [];
+
+        function buildDetail(pages, total) {
+            if (!pages.length) return '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 8px rgba(0,0,0,0.04);color:#9ca3af;font-size:0.85rem;text-align:center">暂无数据</div>';
+            let html = '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 8px rgba(0,0,0,0.04)">';
+            html += '<div style="font-size:0.8rem;color:#6b7280;margin-bottom:12px;font-weight:500">时间都去哪了？</div>';
+            pages.sort((a, b) => b.seconds - a.seconds).forEach(p => {
+                const pct = total > 0 ? (p.seconds / total * 100).toFixed(1) : 0;
+                html += `<div style="margin-bottom:10px">
+                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:#374151;margin-bottom:4px">
+                        <span>${PAGE_NAMES[p.page] || p.page}</span><span style="color:#6b7280">${formatTime(p.seconds)}（${pct}%）</span>
+                    </div>
+                    <div style="height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden">
+                        <div style="height:100%;width:${pct}%;background:#6366f1;border-radius:3px;transition:width 0.5s"></div>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function renderTime() {
+            const total = showToday ? localToday : localTotal;
+            const pages = showToday ? localTodayPages : localPages;
+            document.getElementById('totalTime').textContent = formatTime(total);
+            document.getElementById('timeDetail').innerHTML = buildDetail(pages, total);
+        }
+
+        document.getElementById('toggleBtn').addEventListener('click', function() {
+            const el = document.getElementById('timeDetail');
+            el.style.transform = 'rotateX(-90deg)';
+            el.style.opacity = '0';
+            setTimeout(() => {
+                showToday = !showToday;
+                this.textContent = showToday ? '当日' : '总计';
+                this.style.background = showToday ? '#4338ca' : '#c7d2fe';
+                this.style.color = showToday ? '#fff' : '#4338ca';
+                renderTime();
+                el.style.transform = 'rotateX(90deg)';
+                requestAnimationFrame(() => {
+                    el.style.transform = 'rotateX(0)';
+                    el.style.opacity = '1';
+                });
+            }, 200);
         });
+
+        async function syncTime() {
+            const res = await fetch('/api/time');
+            if (!res.ok) return;
+            serverData = await res.json();
+            localTotal = serverData.total;
+            localPages = serverData.pages.map(p => ({ ...p }));
+            localToday = serverData.todayTotal;
+            localTodayPages = serverData.todayPages.map(p => ({ ...p }));
+            renderTime();
+        }
+        syncTime();
+        setInterval(syncTime, 30000);
+        setInterval(() => {
+            if (window.__ftcTracker && window.__ftcTracker.isActive()) {
+                localTotal++;
+                localToday++;
+                const home = localPages.find(p => p.page === 'home');
+                if (home) home.seconds++; else localPages.push({ page: 'home', seconds: 1 });
+                const th = localTodayPages.find(p => p.page === 'home');
+                if (th) th.seconds++; else localTodayPages.push({ page: 'home', seconds: 1 });
+                renderTime();
+            }
+        }, 1000);
+        window.addEventListener('ftc-reactivate', syncTime);
     </script>
+    <script src="/tracker.js"></script>
+    <script src="/loader.js"></script>
 </body>
 </html>

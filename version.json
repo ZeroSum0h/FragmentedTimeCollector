@@ -1,6 +1,6 @@
 {
-  "versionCode": 2,
-  "versionName": "1.1",
+  "versionCode": 3,
+  "versionName": "1.2",
   "downloadUrl": "/FragmentedTimeCollector.apk",
-  "changelog": "修复登录状态保持问题"
+  "changelog": "修复移动端头像上传、优化页面加载动画"
 }
